@@ -11,6 +11,7 @@ import { HelpView } from './views/HelpView';
 import { ProgramCapacityView } from './views/ProgramCapacityView';
 import { AuthView } from './views/AuthView';
 import { TransitionPanel } from './components/motion-primitives/transition-panel';
+import AIAssistant from './components/AIAssistant';
 import { 
   setOfflineMode, 
   getOfflineMode, 
@@ -321,6 +322,9 @@ export function App() {
           )}
         </main>
       </div>
+
+      {/* Floating AI Assistant — always visible when logged in */}
+      <AIAssistant />
     </div>
   );
 }

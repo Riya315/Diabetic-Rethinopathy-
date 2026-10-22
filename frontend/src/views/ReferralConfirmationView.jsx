@@ -15,7 +15,7 @@ import {
   Eye,
   Activity
 } from 'lucide-react';
-import { createReferral } from '../services/api';
+import { createReferral, getFullImageUrl } from '../services/api';
 import { motion, useReducedMotion } from 'motion/react';
 import Loader from '../components/ui/Loader';
 
@@ -201,13 +201,99 @@ export const ReferralConfirmationView = ({ activePatient, screeningResult, onFin
           </div>
         </div>
 
+        {/* Retinal Fundus & Grad-CAM Heatmap Exhibit for Attending Ophthalmologist */}
+        {(screeningResult?.left_gradcam_path || screeningResult?.right_gradcam_path || screeningResult?.left_image_path || screeningResult?.right_image_path) && (
+          <div className="space-y-3 p-4 rounded-xl bg-sand/20 border border-border-soft">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-soft/60 pb-2">
+              <h3 className="font-bold text-espresso uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5 text-forest" />
+                Retinal Fundus Scans &amp; AI Grad-CAM Lesion Heatmap Exhibit
+              </h3>
+              <div className="flex items-center gap-1.5 text-[10px] text-dark-brown/70 font-mono">
+                <span>Normal Tissue</span>
+                <div className="h-2 w-16 rounded-full bg-gradient-to-r from-blue-600 via-yellow-400 to-red-600"></div>
+                <span className="text-terracotta-dark font-bold">Lesion Hotspot</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Left Eye Pair / Heatmap */}
+              {(screeningResult?.left_image_path || screeningResult?.left_gradcam_path) && (
+                <div className="bg-cream p-3 rounded-lg border border-border-soft space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-espresso border-b border-border-soft/50 pb-1">
+                    <span>Left Eye (OS) — Grade {screeningResult?.left_dr_grade ?? screeningResult?.dr_grade}</span>
+                    <span className="text-[10px] text-dark-brown/70 font-mono">{screeningResult?.left_dr_grade_name || screeningResult?.dr_grade_name}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <div className="aspect-[4/3] bg-black rounded overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={getFullImageUrl(screeningResult?.left_image_path)} 
+                          alt="Left Eye Raw" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[9px] text-dark-brown/70 block text-center font-mono uppercase font-semibold">Raw Fundus</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="aspect-[4/3] bg-black rounded overflow-hidden flex items-center justify-center border border-terracotta/40">
+                        <img 
+                          src={getFullImageUrl(screeningResult?.left_gradcam_path || screeningResult?.left_image_path)} 
+                          alt="Left Eye Heatmap" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[9px] text-terracotta-dark font-bold block text-center font-mono uppercase">Grad-CAM Heatmap</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Right Eye Pair / Heatmap */}
+              {(screeningResult?.right_image_path || screeningResult?.right_gradcam_path) && (
+                <div className="bg-cream p-3 rounded-lg border border-border-soft space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-espresso border-b border-border-soft/50 pb-1">
+                    <span>Right Eye (OD) — Grade {screeningResult?.right_dr_grade ?? screeningResult?.dr_grade}</span>
+                    <span className="text-[10px] text-dark-brown/70 font-mono">{screeningResult?.right_dr_grade_name || screeningResult?.dr_grade_name}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <div className="aspect-[4/3] bg-black rounded overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={getFullImageUrl(screeningResult?.right_image_path)} 
+                          alt="Right Eye Raw" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[9px] text-dark-brown/70 block text-center font-mono uppercase font-semibold">Raw Fundus</span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="aspect-[4/3] bg-black rounded overflow-hidden flex items-center justify-center border border-terracotta/40">
+                        <img 
+                          src={getFullImageUrl(screeningResult?.right_gradcam_path || screeningResult?.right_image_path)} 
+                          alt="Right Eye Heatmap" 
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[9px] text-terracotta-dark font-bold block text-center font-mono uppercase">Grad-CAM Heatmap</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-dark-brown/70 italic">
+              *Grad-CAM heatmaps highlight focal areas of lesion concentration (hemorrhages, exudates, IRMA, neovascularization) driving the neural activation score.
+            </p>
+          </div>
+        )}
+
         {/* Clinical Rationale & Finding */}
         <div className="space-y-2 text-xs leading-relaxed">
           <h3 className="font-bold text-espresso uppercase tracking-wider text-[11px] flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5" />
-            Clinical AI Findings &amp; Rationale
+            Clinical AI Findings &amp; Specialist Rationale
           </h3>
-          <p className="p-3 bg-sand/20 rounded-lg border border-border-soft text-dark-brown">
+          <p className="p-3 bg-sand/20 rounded-lg border border-border-soft text-dark-brown whitespace-pre-line leading-relaxed">
             {screeningResult?.explanation_text}
           </p>
         </div>

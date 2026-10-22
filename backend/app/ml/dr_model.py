@@ -302,28 +302,37 @@ class RetinalAnalysisPipeline:
     def _generate_explanation(self, grade: int, is_referable: bool, conf: float, num_hotspots: int) -> str:
         if grade == 0:
             return (
-                f"The AI neural model classified this scan as Grade 0 (No Diabetic Retinopathy) with {conf}% confidence. "
-                "No vision-threatening microvascular lesions were detected. Routine annual screening is recommended."
+                f"✅ NORMAL (Grade 0 - No Diabetic Retinopathy | {conf}% confidence)\n"
+                f"• DOCTOR CONSULTATION: No specialist referral required at this stage.\n"
+                f"• CLINICAL FINDINGS: Retinal vasculature, optic disc margin, and foveal reflex appear normal without diabetic lesions.\n"
+                f"• RECOMMENDATION: Routine annual screening at Primary Health Centre (PHC) & routine diabetes glycemic management."
             )
         if grade == 1:
             return (
-                f"The AI model identified signs consistent with Mild Non-Proliferative DR ({conf}% confidence). "
-                "Isolated microaneurysms detected below the referable threshold. Routine review in 6-12 months is advised."
+                f"ℹ️ MILD FINDING (Grade 1 - Mild NPDR | {conf}% confidence)\n"
+                f"• DOCTOR CONSULTATION: Specialist review not immediately required (below referable threshold).\n"
+                f"• CLINICAL FINDINGS: Isolated microaneurysms detected without hard exudates or macular involvement.\n"
+                f"• RECOMMENDATION: Routine re-screening in 6–12 months. Advise patient on glycemic control (target HbA1c < 7%) and blood pressure."
             )
         if grade == 2:
             return (
-                f"The retinal scan demonstrates Moderate Non-Proliferative Diabetic Retinopathy ({conf}% confidence). "
-                f"Grad-CAM activations highlight localized microvascular lesion clusters across {max(1, num_hotspots)} focal region(s). "
-                "Specialist ophthalmologist review is recommended within 30 days."
+                f"⚠️ REFERABLE (Grade 2 - Moderate NPDR | {conf}% confidence)\n"
+                f"• DOCTOR CONSULTATION REQUIRED: YES — Specialist Ophthalmologist review within 30 days.\n"
+                f"• CLINICAL FINDINGS: Multiple dot/blot hemorrhages and hard exudates detected. Grad-CAM heatmap isolates {max(1, num_hotspots)} active lesion focal cluster(s).\n"
+                f"• SPECIALIST WORKUP: Dilated slit-lamp biomicroscopy & baseline Macular OCT to evaluate for subclinical diabetic macular edema (DME)."
             )
         if grade == 3:
             return (
-                f"Critical screening finding: Severe Non-Proliferative Diabetic Retinopathy ({conf}% confidence). "
-                "The neural model detected extensive retinal hemorrhages and microvascular abnormalities. Priority referral within 2-4 weeks required."
+                f"🚨 SEVERE FINDING (Grade 3 - Severe NPDR | {conf}% confidence)\n"
+                f"• DOCTOR CONSULTATION REQUIRED: URGENT YES — Priority Ophthalmologist Referral within 2–4 weeks.\n"
+                f"• CLINICAL FINDINGS: High-risk non-proliferative changes detected (consistent with 4-2-1 rule: multi-quadrant retinal hemorrhages, venous caliber variations, and IRMA). Grad-CAM heatmap isolates {max(1, num_hotspots)} hyper-intense activation zone(s).\n"
+                f"• DOCTOR ACTION PLAN: Slit-lamp biomicroscopy (78D/90D lens), Macular SD-OCT to rule out center-involving DME, and consider early Panretinal Photocoagulation (PRP) laser assessment to prevent progression to Proliferative DR."
             )
         return (
-            f"Urgent finding: Proliferative Diabetic Retinopathy ({conf}% confidence). "
-            "High-risk neovascularization patterns detected. Immediate specialist ophthalmology intervention required within 48-72 hours."
+            f"🚨 CRITICAL FINDING (Grade 4 - Proliferative Diabetic Retinopathy | {conf}% confidence)\n"
+            f"• DOCTOR CONSULTATION REQUIRED: IMMEDIATE YES — Urgent Specialist Intervention within 48–72 hours.\n"
+            f"• CLINICAL FINDINGS: High-risk neovascularization patterns detected (NVD/NVE) with impending risk of vitreous hemorrhage or tractional retinal detachment. Grad-CAM heatmap highlights severe localized angiogenic attention across {max(1, num_hotspots)} focal zone(s).\n"
+            f"• DOCTOR ACTION PLAN: Immediate tertiary vitreoretinal evaluation. Urgent consideration of anti-VEGF intravitreal therapy and/or urgent Panretinal Photocoagulation (PRP) laser to prevent irreversible vision loss."
         )
 
 

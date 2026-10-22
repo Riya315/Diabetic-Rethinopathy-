@@ -6,12 +6,38 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc
 
 from backend.app.models.schemas import (
-    ReferralDB, ReferralCreate, ReferralResponse, UserDB, get_db
+    ReferralDB, ScreeningDB, ReferralCreate, ReferralResponse, UserDB, get_db
 )
 from backend.app.routers.auth import require_auth
 from backend.app.utils.tenant import get_user_patient, get_user_screening, get_user_referral
 
 router = APIRouter(prefix="/referrals", tags=["Referrals"])
+
+
+def _format_referral_response(referral: ReferralDB, db: Session) -> ReferralResponse:
+    """Build ReferralResponse, enriched with Grad-CAM image paths from the linked screening."""
+    screening = db.query(ScreeningDB).filter(ScreeningDB.id == referral.screening_id).first()
+    return ReferralResponse(
+        id=referral.id,
+        referral_code=referral.referral_code,
+        patient_id=referral.patient_id,
+        patient_code=referral.patient_code,
+        patient_name=referral.patient_name,
+        screening_id=referral.screening_id,
+        dr_grade=referral.dr_grade,
+        dr_grade_name=referral.dr_grade_name,
+        urgency=referral.urgency,
+        target_facility=referral.target_facility,
+        referral_reason=referral.referral_reason,
+        suggested_timeframe=referral.suggested_timeframe,
+        notes=referral.notes,
+        status=referral.status,
+        created_at=referral.created_at,
+        left_image_path=screening.left_image_path if screening else None,
+        right_image_path=screening.right_image_path if screening else None,
+        left_gradcam_path=screening.left_gradcam_path if screening else None,
+        right_gradcam_path=screening.right_gradcam_path if screening else None,
+    )
 
 
 @router.post("", response_model=ReferralResponse)
@@ -35,7 +61,7 @@ def create_referral(
         .first()
     )
     if existing_referral:
-        return existing_referral
+        return _format_referral_response(existing_referral, db)
 
     referral_code = f"REF-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
 
@@ -71,7 +97,7 @@ def create_referral(
     db.commit()
     db.refresh(new_referral)
 
-    return new_referral
+    return _format_referral_response(new_referral, db)
 
 
 @router.get("", response_model=List[ReferralResponse])
@@ -80,13 +106,14 @@ def list_referrals(
     current_user: UserDB = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    return (
+    referrals = (
         db.query(ReferralDB)
         .filter(ReferralDB.user_id == current_user.id)
         .order_by(desc(ReferralDB.created_at))
         .limit(limit)
         .all()
     )
+    return [_format_referral_response(r, db) for r in referrals]
 
 
 @router.get("/{referral_id}", response_model=ReferralResponse)
@@ -95,7 +122,8 @@ def get_referral(
     current_user: UserDB = Depends(require_auth),
     db: Session = Depends(get_db)
 ):
-    return get_user_referral(db, referral_id, current_user.id)
+    referral = get_user_referral(db, referral_id, current_user.id)
+    return _format_referral_response(referral, db)
 
 
 @router.patch("/{referral_id}/status", response_model=ReferralResponse)
@@ -109,4 +137,4 @@ def update_referral_status(
     referral.status = status
     db.commit()
     db.refresh(referral)
-    return referral
+    return _format_referral_response(referral, db)

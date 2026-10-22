@@ -340,6 +340,10 @@ class ReferralResponse(BaseModel):
     notes: Optional[str]
     status: str
     created_at: datetime.datetime
+    left_image_path: Optional[str] = None
+    right_image_path: Optional[str] = None
+    left_gradcam_path: Optional[str] = None
+    right_gradcam_path: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
